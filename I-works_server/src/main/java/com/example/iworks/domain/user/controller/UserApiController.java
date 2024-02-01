@@ -2,10 +2,12 @@ package com.example.iworks.domain.user.controller;
 
 import com.example.iworks.domain.department.domain.Department;
 import com.example.iworks.domain.user.domain.User;
-import com.example.iworks.global.model.entity.Code;
 import com.example.iworks.domain.user.repository.UserRepository;
+import com.example.iworks.global.model.Response;
+import com.example.iworks.global.model.entity.Code;
+import com.example.iworks.global.util.JwtProvider;
+import com.example.iworks.global.util.RandomPasswordUtil;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,28 +25,20 @@ public class UserApiController {
 
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
     private final UserRepository userRepository;
-
-    @GetMapping("/home")
-    public String home() {
-        return "<h1>home</h1>";
-    }
-
-
-    @PostMapping("/login")
-    public ResponseEntity<Map<String, Object>> login(@RequestBody User user) {
-        System.out.println(user);
-        return null;
-    }
+    private final Response response;
+    private final RandomPasswordUtil randomPasswordUtil;
+    private  final JwtProvider jwtProvider;
 
     @PostMapping("/join")
-    public String join(@RequestBody User user) {
-        System.out.println(user);
+    public ResponseEntity<Map<String, Object>> join(@RequestBody User user) {
+        if (userRepository.findByUserEid(user.getUserEid())!=null){
+            return response.handleFail("이미 존재하는 계정입니다.");
+        }
 
         Department dept = new Department();
         dept.setDepartmentId(1);
         dept.setDepartmentName("testDept");
         Code code = new Code();
-        code.setCodeId(1);
         user.setUserPositionCode(code);
         user.setUserCreatedAt(LocalDateTime.now());
         user.setUserUpdatedAt(LocalDateTime.now());
@@ -57,57 +51,54 @@ public class UserApiController {
         } else{
             roleList.add("ROLE_EMPLOYEE");
         }
-        user.setUserPassword(bCryptPasswordEncoder.encode(user.getUserPassword()));
+        int length = (int) (Math.random() * (12 - 8 + 1)) +8; // 8~12 길이
+        String password = randomPasswordUtil.getRandomPassword(length);
+        user.setUserPassword(bCryptPasswordEncoder.encode(password));
         user.setRoleList(roleList);
         userRepository.save(user);
-        return "join success";
+        Map<String, Object> map = new HashMap<>();
+        map.put("message","회원가입 성공!");
+        map.put("data",password);
+        return response.handleSuccess(map);
     }
 
     @GetMapping("/mypage")
-    public ResponseEntity<Map<String,Object>> getProfile(@RequestBody String eid){
+    public ResponseEntity<Map<String,Object>> getProfile(@RequestHeader("Authorization") String token){
+        String eid = jwtProvider.getUserEid(token);
+        System.out.println("token eid : "+eid);
         User user= userRepository.findByUserEid(eid);
         if(user != null){
-            return handleSuccess(user);
+            return response.handleSuccess(user);
         }
-        return handleError("couldn't find user with "+eid);
+        return response.handleFail("couldn't find user with "+eid);
     }
 
     @PutMapping("/mypage")
     @Transactional
-    public ResponseEntity<Map<String,Object>> updateProfile(@RequestBody User user){
-        User origin = userRepository.findByUserEid(user.getUserEid());
+    public ResponseEntity<Map<String,Object>> updateProfile(@RequestHeader("Authorization") String token,@RequestBody User user){
+        User origin = userRepository.findByUserEid(jwtProvider.getUserEid(token));
+        System.out.println("origin: " + origin);
         if(origin != null){
-        origin.setUserPassword(user.getUserPassword());
-        origin.setUserAddress(user.getUserAddress());
-        origin.setUserEmail(user.getUserEmail());
-        origin.setUserTelFirst(user.getUserTelFirst());
-        origin.setUserTelMiddle(user.getUserTelMiddle());
-        origin.setUserTelLast(user.getUserTelLast());
-            return handleSuccess(origin);
+
+            if(user.getUserPassword() != null){
+                origin.setUserPassword(bCryptPasswordEncoder.encode(user.getUserPassword()));
+            }
+
+            if(user.getUserAddress()!=null){
+                origin.setUserAddress(user.getUserAddress());
+            }
+
+            if(user.getUserEmail()!=null){
+                origin.setUserEmail(user.getUserEmail());
+            }
+
+            if(user.getUserTel() !=null){
+                origin.setUserTel(user.getUserTel());
+            }
+            return response.handleSuccess(origin);
         }
-        return handleError("couldn't find user with "+user.toString());
+
+        return response.handleFail("couldn't find user with "+user.toString());
     }
 
-
-    private ResponseEntity<Map<String,Object>> handleSuccess(Object data){
-        Map<String,Object> result = new HashMap<>();
-        result.put("result","success");
-        result.put("data",data);
-        return new ResponseEntity<Map<String,Object>>(result,HttpStatus.OK);
-    }
-
-    private ResponseEntity<Map<String,Object>> handleError(Object data){
-        Map<String,Object> result = new HashMap<>();
-        result.put("result","failed");
-        result.put("data",data);
-        return new ResponseEntity<Map<String,Object>>(result, HttpStatus.INTERNAL_SERVER_ERROR);
-    }
-
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<Map<String,Object>> ExceptionHandler(Exception e){
-        Map<String,Object> result = new HashMap<>();
-        result.put("result","error");
-        result.put("data",e.getMessage());
-        return new ResponseEntity<Map<String,Object>>(result,HttpStatus.INTERNAL_SERVER_ERROR);
-    }
 }

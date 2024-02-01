@@ -1,77 +1,121 @@
 package com.example.iworks.domain.schedule.domain;
 
-import com.example.iworks.domain.schedule.meeting.model.entity.Meeting;
+import com.example.iworks.domain.meeting.domain.Meeting;
+import com.example.iworks.domain.schedule.dto.schedule.ScheduleUpdateRequestDto;
+import com.example.iworks.domain.user.domain.User;
 import com.example.iworks.global.model.entity.Code;
+
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
+import org.hibernate.annotations.ColumnDefault;
+import org.hibernate.annotations.CurrentTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "schedule")
 @Getter
-@IdClass(ScheduleId.class)
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
+@ToString
 public class Schedule {
 
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "schedule_id", nullable = false)
-    private int scheduleId; // 할 일 아이디
+    @Id @GeneratedValue
+    @Column(name = "schedule_id")
+    private Integer scheduleId; // 할 일 아이디
 
-    @Id
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "schedule_category_code_id",
-            referencedColumnName = "code_id",
-            nullable = false, updatable = false, insertable = false
-    )
-    private Code scheduleCategoryCode; //할 일 카테코리 코드
+    @ManyToOne(fetch = FetchType.LAZY) //단방향
+    @JoinColumn(name = "schedule_division_id")
+    private Code scheduleDivision; //할일 분류 아이디 , 행사 or 업무 or 개인일정(병가) or  개인일정(외출) or  개인일정(휴가)
 
-    @Id
-    @Column(name = "schedule_owner_id",
-            nullable = false, updatable = false, insertable = false
-    )
-    private int scheduleOwnerId; // 할 일 주체 아이디
+    @Builder.Default
+    @Column(name = "schedule_title", nullable = false, length = 50)
+    private String scheduleTitle = "scheduleName"; //할 일 이름
 
-    @Column(name = "schedule_title", nullable = false)
-    private String scheduleTitle; //할 일 이름
+    @Builder.Default
+    @Column(name = "schedule_priority", nullable = false, length = 1)
+    private Character schedulePriority = 'M'; //할 일 우선순위 H: high, M:Medium, L:low
 
-    @Column(name = "schedule_priority", nullable = false)
-    private String schedulePriority; //할 일 우선순위 H: high, M:Medium, L:low
+    @Builder.Default
+    @Column(name = "schedule_content", columnDefinition = "TEXT" )
+    private String scheduleContent = "this is content..."; //할 일 내용
 
-    @Column(name = "schedule_content")
-    private String scheduleContent; //할 일 내용
-
+    @Builder.Default
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "schedule_start_date", nullable = false)
-    private LocalDateTime scheduleStartDate; //할 일의 시작일시
+    private LocalDateTime scheduleStartDate = LocalDateTime.now(); //할 일의 시작일시
 
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "schedule_end_date", nullable = false)
     private LocalDateTime scheduleEndDate; //할 일의 종료일시
 
-    @Temporal(TemporalType.TIMESTAMP)
-    @Column(name = "schedule_deadline")
-    private LocalDateTime scheduleDeadline; //할 일의 마감일시
+    @Builder.Default
+    @Column(name = "schedule_is_finish", nullable = false)
+    private Boolean scheduleIsFinish = false; //할일의 완료 여부
 
-    @Column(name = "schedule_place")
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "schedule_finished_at")
+    private LocalDateTime scheduleFinishedAt; //할일 완료 일시
+
+    @Column(name = "schedule_place", length = 50)
     private String schedulePlace; //할 일의 장소
 
-    @Column(name = "schedule_creator_id", nullable = false)
-    private int scheduleCreatorId; // 등록자 아이디
+    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "schedule_meeting_id", referencedColumnName = "meeting_id")
+    private Meeting scheduleMeeting; //회의방 아이디
+
+    @ManyToOne(fetch = FetchType.LAZY) //단방향
+    @JoinColumn(name = "schedule_creator_id", referencedColumnName = "user_id", nullable = false)
+    private User scheduleCreator; // 등록자 아이디
+
+    @Builder.Default
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "schedule_created_at", nullable = false, columnDefinition = "datetime default current_timestamp")
+    private LocalDateTime scheduleCreatedAt = LocalDateTime.now(); //등록 일시
+
+    @ManyToOne(fetch = FetchType.LAZY) //단방향
+    @JoinColumn(name = "schedule_modifier_id", referencedColumnName = "user_id")
+    private User scheduleModifier; // 수정한 사람의 아이디
 
     @Temporal(TemporalType.TIMESTAMP)
-    @Column(name = "schedule_created_at", nullable = false)
-    private LocalDateTime scheduleCreatedAt; //등록 일시
+    @Column(name = "schedule_modified_at", columnDefinition = "datetime default current_timestamp")
+    private LocalDateTime scheduleModifiedAt; //할일의 수정일시
 
-    @Column(name = "schedule_modifier_id")
-    private int scheduleModifierId; // 수정한 사람의 아이디
+    @Builder.Default
+    @OneToMany(mappedBy = "schedule", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true) //ScheduleAssign - Code 단방향
+    private List<ScheduleAssign> scheduleAssigns = new ArrayList<>(); //할일 배정자
 
-    @Temporal(TemporalType.TIMESTAMP)
-    @Column(name = "schedule_modified_at")
-    private LocalDateTime scheduleModifiedAt; //할 일의 수정일시
+    public void addScheduleAssigns(ScheduleAssign scheduleAssign){
+        this.scheduleAssigns.add(scheduleAssign);
+        scheduleAssign.setSchedule(this);
+    }
 
-    @OneToOne
-    @JoinColumn(name = "meeting_id")
-    private Meeting meeting;
+    public void setMeeting(Meeting meeting){
+        this.scheduleMeeting = meeting;
+        if (meeting.getSchedule() != this){
+            meeting.setSchedule(this);
+        }
+    }
+    public void isFinished(boolean isFinish){
+        scheduleIsFinish = isFinish;
+    }
 
+    public void updateSchedule(Code code, ScheduleUpdateRequestDto scheduleUpdateRequestDto){
+        this.scheduleDivision = code;
+        this.scheduleTitle = scheduleUpdateRequestDto.getScheduleTitle();
+        this.schedulePriority = scheduleUpdateRequestDto.getSchedulePriority();
+        this.scheduleContent = scheduleUpdateRequestDto.getScheduleContent();
+        this.scheduleStartDate = scheduleUpdateRequestDto.getScheduleStartDate();
+        this.scheduleEndDate = scheduleUpdateRequestDto.getScheduleEndDate();
+        this.schedulePlace = scheduleUpdateRequestDto.getSchedulePlace();
+        this.scheduleMeeting.updateMeeting(scheduleUpdateRequestDto.getMeetingDate(), scheduleUpdateRequestDto.getMeetingCode());
+    }
 
 }
