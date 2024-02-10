@@ -5,9 +5,6 @@ import com.example.iworks.domain.meeting.domain.Meeting;
 import com.example.iworks.domain.notification.domain.UserNotification;
 import com.example.iworks.domain.schedule.domain.Schedule;
 import com.example.iworks.domain.user.domain.User;
-import com.example.iworks.global.enumtype.NotificationType;
-import com.example.iworks.global.model.entity.Code;
-import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
@@ -23,9 +20,7 @@ public class UserNotificationCreateRequestDto {
 
     private int scheduleId; // 할일 아이디
 
-    private int meetingId; // 회의 아이디
-
-    private String notificationContent; // 알림 내용
+    private int meetingId; // 할일 아이디
 
     private String notificationType; // 알림 타입(생성, 삭제, 수정)
 
@@ -37,7 +32,6 @@ public class UserNotificationCreateRequestDto {
                 .userNotificationBoard(board)
                 .userNotificationSchedule(schedule)
                 .userNotificationMeeting(meeting)
-                .userNotificationContent(notificationContent)
                 .build();
     }
 }
