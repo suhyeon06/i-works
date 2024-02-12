@@ -11,6 +11,8 @@ import BoardCreate from './pages/boards/BoardCreate';
 import BoardUpdate from './pages/boards/BoardUpdate';
 import BoardDetail from './pages/boards/BoardDetail';
 import BoardSearch from './pages/boards/BoardSearchPage';
+import ChatPage from './pages/ChatPage';
+import AddressSelect from './components/AddressSelect';
 
 const router = createBrowserRouter([
   {
@@ -30,7 +32,7 @@ const router = createBrowserRouter([
             action: logoutAction,
           },
           {
-            path:'mypage',
+            path: 'mypage',
             element: <MyPage />,
             loader: myPageLoader,
           },
@@ -72,12 +74,17 @@ const router = createBrowserRouter([
           },
         ]
       },
-      // 캘린더 라우터
-      // {
-      //   path: 'schedule',
-      //   element: <SchedulePage />
-      // },
+      // 채팅 라우터
+      {
+        path: 'chat',
+        element: <ChatPage />
+      },
     ]
+  },
+  // 공통 라우터
+  {
+    path: '/popup/address/select',
+    element: <AddressSelect />
   },
 ]);
 
