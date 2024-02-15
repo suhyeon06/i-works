@@ -1,12 +1,33 @@
-import { Outlet } from "react-router-dom"
+import { Outlet, useNavigate } from "react-router-dom"
 import { Button } from "flowbite-react"
 import ChatModal from "../../components/ChatModal"
-import { useState } from "react"
+import { ChangeEvent, useEffect, useState } from "react"
+import axios from "axios";
+
+interface ChatRoomType {
+  chatRoomId: string
+  chatRoomName: string
+}
+
 
 function ChatSideBar() {
 
+  const navigate = useNavigate();
 
-  const [modalIsOpen, setModalIsOpen] = useState(false);
+  const [chatrooms, setChatrooms] = useState<ChatRoomType[]>([]);
+  const [modalIsOpen, setModalIsOpen] = useState(false)
+  const [sender, setSender] = useState(localStorage.getItem('wschat.sender'));
+  const [roomId, setRoomId] = useState(localStorage.getItem('wschat.roomId'));
+
+  const handleChatRoomClick = (chatRoomId : string) => {
+    const sender = prompt('대화명을 입력해 주세요.');
+    localStorage.setItem('wschat.sender', sender);
+    localStorage.setItem('wschat.roomId', chatRoomId);
+    setSender(sender);
+    setRoomId(chatRoomId);
+    navigate(`/chat/room/${chatRoomId}`);
+  };
+
   const openModal = () => {
     setModalIsOpen(true);
   };
@@ -15,6 +36,21 @@ function ChatSideBar() {
     setModalIsOpen(false);
   };
 
+  const findAllRooms = async () => {
+    try {
+      const response = await axios.get('http://localhost:8080/api/chat/room');
+      setChatrooms(response.data.data);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  useEffect(() => {
+    setSender(localStorage.getItem('wschat.sender'));
+    setRoomId(localStorage.getItem('wschat.roomId'));
+    findAllRooms();
+  }, []);
+  
   return (
     <div className="flex h-full">
       <div className="flex flex-col items-center border-r-2 m-0 px-3 position-absolute w-72 flex-shrink-0">
@@ -27,12 +63,17 @@ function ChatSideBar() {
             onClose={closeModal}
           />
         </div>
-      </div>
-      <div className="flex flex-col px-40 pt-4 overflow-auto flex-grow">
-        <div className="mb-20">
-          <Outlet />
+        <div>
+          {chatrooms && chatrooms.map((chatroom, index) => (
+            <div className="border-b-2 pb-2 mb-2" key={index}>
+              <div className="mb-2 text-md font-semibold">
+                <h2 onClick={() => handleChatRoomClick(chatroom.chatRoomId)}>{chatroom.chatRoomName}</h2>
+              </div>
+            </div>
+          ))}
         </div>
-      </div>  
+      </div>
+      <Outlet />
     </div >
   )
 }

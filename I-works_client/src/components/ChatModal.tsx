@@ -30,6 +30,7 @@ const ChatModal: React.FC<BoardModalProps> = ({ show, onClose }) => {
   const [chatTitle, setchatTitle] = useState<string>('')
   const [teamMemberData, setteamMemberData] = useState<UserData[]>([]);
 
+
   const onNameChange = (event: ChangeEvent<HTMLInputElement>) => {
     setchatTitle(event.target.value)
   }
@@ -37,19 +38,10 @@ const ChatModal: React.FC<BoardModalProps> = ({ show, onClose }) => {
   // api 요청
   function handleCreate(event: FormEvent) {
     event.preventDefault()
-    const targetIdArray = teamMemberData.map(user => user.userId);
-    if (!loginedUser) {
-      // 유저 정보가 없을 경우에 대한 처리
-      return navigate(`/login`)
-    }
     axios
-      .post("https://suhyeon.site/api/chat/chatrooms", {
-        "eId": loginedUser.userEid,
-        "users": targetIdArray,
-        "title": chatTitle
-      })
+      .post(`http://localhost:8080/api/chat/room?chatRoomName=${chatTitle}`)
       .then((res) => {
-        navigate("../")
+        navigate("../chat")
         onClose()
         console.log(res.data)
       })
@@ -57,6 +49,7 @@ const ChatModal: React.FC<BoardModalProps> = ({ show, onClose }) => {
         console.log(err)
       })
   }
+
 
   // 주소록
   const addSelectedUsersToTeamMembers = (selectedUsers: UserData[]) => {
@@ -126,6 +119,7 @@ const ChatModal: React.FC<BoardModalProps> = ({ show, onClose }) => {
       size="lg"
     >
       <h1 className="mt-6 mb-2 pl-8 font-semibold text-lg">채팅방 만들기</h1>
+
       <div className="flex flex-col items-center py-10 mx-6 mb-6 border-2">
         <Form className="w-80">
           <div className="flex flex-col my-2">

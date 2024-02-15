@@ -12,6 +12,7 @@ import BoardUpdate from './pages/boards/BoardUpdate';
 import BoardDetail from './pages/boards/BoardDetail';
 import BoardSearch from './pages/boards/BoardSearchPage';
 import ChatPage from './pages/ChatPage';
+import ChatRoom from './pages/chattngs/ChatRoom';
 import AddressSelect from './components/AddressSelect';
 
 const router = createBrowserRouter([
@@ -77,7 +78,13 @@ const router = createBrowserRouter([
       // 채팅 라우터
       {
         path: 'chat',
-        element: <ChatPage />
+        element: <ChatPage />,
+        children: [
+          {
+            path: 'room/:chatRoomId',
+            element: <ChatRoom />
+          },
+        ]
       },
     ]
   },
