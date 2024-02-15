@@ -4,6 +4,7 @@ import axios from "axios";
 import { useUser } from "../utils/userInfo";
 import { Form, useNavigate } from "react-router-dom";
 import { RiDeleteBin2Line } from "react-icons/ri";
+import { getAccessToken } from "../utils/auth";
 
 interface BoardModalProps {
   show: boolean;
@@ -39,7 +40,11 @@ const ChatModal: React.FC<BoardModalProps> = ({ show, onClose }) => {
   function handleCreate(event: FormEvent) {
     event.preventDefault()
     axios
-      .post(`http://localhost:8080/api/chat/room?chatRoomName=${chatTitle}`)
+      .post(`https://suhyeon.site/api/chat/room?chatRoomName=${chatTitle}`, {}, {
+        headers: {
+          Authorization: 'Bearer ' + getAccessToken(),
+        },
+      })
       .then((res) => {
         navigate("../chat")
         onClose()

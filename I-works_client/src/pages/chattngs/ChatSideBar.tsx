@@ -1,8 +1,9 @@
 import { Outlet, useNavigate } from "react-router-dom"
 import { Button } from "flowbite-react"
 import ChatModal from "../../components/ChatModal"
-import { ChangeEvent, useEffect, useState } from "react"
+import { useEffect, useState } from "react"
 import axios from "axios";
+import { getAccessToken } from "../../utils/auth";
 
 interface ChatRoomType {
   chatRoomId: string
@@ -16,16 +17,15 @@ function ChatSideBar() {
 
   const [chatrooms, setChatrooms] = useState<ChatRoomType[]>([]);
   const [modalIsOpen, setModalIsOpen] = useState(false)
-  const [sender, setSender] = useState(localStorage.getItem('wschat.sender'));
-  const [roomId, setRoomId] = useState(localStorage.getItem('wschat.roomId'));
 
   const handleChatRoomClick = (chatRoomId : string) => {
-    const sender = prompt('대화명을 입력해 주세요.');
-    localStorage.setItem('wschat.sender', sender);
-    localStorage.setItem('wschat.roomId', chatRoomId);
-    setSender(sender);
-    setRoomId(chatRoomId);
-    navigate(`/chat/room/${chatRoomId}`);
+    const senderInput: string | null = prompt('대화명을 입력해 주세요.')
+    if (senderInput) {
+      localStorage.setItem('wschat.sender', senderInput)
+      localStorage.setItem('wschat.roomId', chatRoomId);
+      navigate(`/chat/room/${chatRoomId}`);
+    }
+    return
   };
 
   const openModal = () => {
@@ -38,7 +38,11 @@ function ChatSideBar() {
 
   const findAllRooms = async () => {
     try {
-      const response = await axios.get('http://localhost:8080/api/chat/room');
+      const response = await axios.get('https://suhyeon.site/api/chat/room', {
+        headers: {
+          Authorization: 'Bearer ' + getAccessToken(),
+        },
+      });
       setChatrooms(response.data.data);
     } catch (error) {
       console.error(error);
@@ -46,8 +50,6 @@ function ChatSideBar() {
   };
 
   useEffect(() => {
-    setSender(localStorage.getItem('wschat.sender'));
-    setRoomId(localStorage.getItem('wschat.roomId'));
     findAllRooms();
   }, []);
   
