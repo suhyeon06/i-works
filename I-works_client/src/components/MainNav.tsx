@@ -32,7 +32,7 @@ function MainNav() {
           <Link to="/board" className="block py-2 px-4">게시판</Link>
         </li>
         <li>
-          <Link to="#" className="block py-2 px-4">채팅</Link>
+          <Link to="/chat" className="block py-2 px-4">채팅</Link>
         </li>
         <li>
           <Link to="/address" className="block py-2 px-4">주소록</Link>

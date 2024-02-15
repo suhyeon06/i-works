@@ -28,6 +28,9 @@ import GroupUpdate from './pages/addresses/GroupUpdate'
 
 import CalendarPage from './pages/CalendarPage';
 import CalendarIndex from './pages/calendars/CalendarIndex';
+import ChatPage from './pages/ChatPage';
+import ChatRoom from './pages/chattngs/ChatRoom';
+import AddressSelect from './components/AddressSelect';
 
 const router = createBrowserRouter([
   {
@@ -133,17 +136,28 @@ const router = createBrowserRouter([
           },
         ]
       },
+      // 채팅 라우터
+      {
+        path: 'chat',
+        element: <ChatPage />,
+        children: [
+          {
+            path: 'room/:chatRoomId',
+            element: <ChatRoom />
+          },
+        ]
+      },
       {
         path: 'schedule',
         element: <SchedulePage />,
         loader: getMyPageData,
       },
-    ],
+    ]
   },
   // 공통 라우터
   {
     path: '/popup/address/select',
-    element: <AddressSelect />,
+    element: <AddressSelect />
   },
 ])
 
