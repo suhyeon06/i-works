@@ -4,7 +4,6 @@ package com.example.iworks.domain.schedule.repository.schedule;
 import com.example.iworks.domain.schedule.domain.Schedule;
 import com.example.iworks.domain.schedule.dto.schedule.response.ScheduleResponseDto;
 import com.example.iworks.domain.schedule.dto.scheduleAssign.request.AssigneeInfo;
-import com.example.iworks.domain.schedule.repository.schedule.custom.ScheduleAssignSearchRepository;
 import com.example.iworks.domain.schedule.repository.schedule.custom.ScheduleSearchRepository;
 import com.example.iworks.global.dto.DateCondition;
 import com.querydsl.core.types.dsl.BooleanExpression;
@@ -24,7 +23,7 @@ import static com.querydsl.jpa.JPAExpressions.select;
 import static java.util.stream.Collectors.toList;
 
 @RequiredArgsConstructor
-public class ScheduleRepositoryImpl implements ScheduleSearchRepository, ScheduleAssignSearchRepository {
+public class ScheduleRepositoryImpl implements ScheduleSearchRepository {
 
     private final JPAQueryFactory queryFactory;
 
@@ -39,10 +38,6 @@ public class ScheduleRepositoryImpl implements ScheduleSearchRepository, Schedul
                 .stream()
                 .map(ScheduleResponseDto::new)
                 .collect(toList());
-    }
-
-    private BooleanExpression notDeleted() {
-        return schedule.scheduleIsDeleted.isFalse();
     }
 
     private BooleanExpression containsKeyword(String keyword) {
@@ -93,6 +88,9 @@ public class ScheduleRepositoryImpl implements ScheduleSearchRepository, Schedul
         if (dateCondition == null) return Expressions.TRUE;
         return schedule.scheduleStartDate.loe(dateCondition.getEndDate())
                 .and(schedule.scheduleEndDate.goe(dateCondition.getStartDate()));
+    }
+    private BooleanExpression notDeleted() {
+        return schedule.scheduleIsDeleted.isFalse();
     }
 
 }

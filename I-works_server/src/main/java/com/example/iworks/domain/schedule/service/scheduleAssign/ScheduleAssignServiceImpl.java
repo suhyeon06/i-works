@@ -52,7 +52,6 @@ public class ScheduleAssignServiceImpl implements ScheduleAssignService{
                 .toList();
     }
 
-    /** 할일 생성에서 선택된 소속의 할일 배정 및 할일 조회 */
     @Override
     public List<ScheduleAssignResponseDto> findByAssignees(List<AssigneeInfo> assigneeInfos, DateCondition dateCondition) {
 
@@ -62,33 +61,6 @@ public class ScheduleAssignServiceImpl implements ScheduleAssignService{
                 .toList();
     }
 
-//    @Override
-//    public List<ScheduleResponseDto> findTaskByUser(int userId, DateCondition dateCondition) {
-//        return scheduleAssignRepository.findScheduleAssignsBySearchParameter(findUserBelongs(userId), dateCondition, true)
-//                .stream()
-//                .map(ScheduleResponseDto::new)
-//                .toList();
-//    }
-//
-//    @Override
-//    public List<ScheduleResponseDto> findByUser(int userId, DateCondition dateCondition) {
-//        return scheduleAssignRepository.findScheduleAssignsBySearchParameter(findUserBelongs(userId), dateCondition, false)
-//                .stream()
-//                .map(ScheduleResponseDto::new)
-//                .toList();
-//    }
-//
-//    /** 할일 생성에서 선택된 소속의 할일 배정 및 할일 조회 */
-//    @Override
-//    public List<ScheduleResponseDto> findByAssignees(List<AssigneeInfo> assigneeInfos, DateCondition dateCondition) {
-//
-//        return scheduleAssignRepository.findScheduleAssignsBySearchParameter(assigneeInfos, dateCondition, false)
-//                .stream()
-//                .map(ScheduleResponseDto::new)
-//                .toList();
-//    }
-
-    /** 유저의 모든 소속에 대한 할일 배정 검색 조건 조회*/
     @Override
     public List<AssigneeInfo> findUserBelongs(int userId) {
 

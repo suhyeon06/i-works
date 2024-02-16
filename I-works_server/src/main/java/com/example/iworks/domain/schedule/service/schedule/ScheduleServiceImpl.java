@@ -14,10 +14,13 @@ import com.example.iworks.domain.schedule.dto.scheduleAssign.request.AssigneeInf
 import com.example.iworks.domain.schedule.exception.ScheduleErrorCode;
 import com.example.iworks.domain.schedule.exception.ScheduleException;
 import com.example.iworks.domain.schedule.repository.schedule.ScheduleRepository;
+import com.example.iworks.domain.team.domain.TeamUser;
+import com.example.iworks.domain.team.repository.teamuser.TeamUserRepository;
 import com.example.iworks.domain.user.domain.User;
 import com.example.iworks.domain.user.exception.UserException;
 import com.example.iworks.domain.user.repository.UserRepository;
 import com.example.iworks.domain.user.service.UserService;
+import com.example.iworks.global.dto.DateCondition;
 import com.example.iworks.global.enumtype.NotificationType;
 import com.example.iworks.global.util.OpenViduUtil;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +33,7 @@ import java.util.List;
 import static com.example.iworks.domain.code.exception.CodeErrorCode.CODE_NOT_EXIST;
 import static com.example.iworks.domain.schedule.exception.ScheduleErrorCode.SCHEDULE_NOT_EXIST;
 import static com.example.iworks.domain.user.exception.UserErrorCode.USER_NOT_EXIST;
+import static com.example.iworks.global.common.CodeDef.*;
 
 @Service
 @RequiredArgsConstructor
@@ -42,6 +46,7 @@ public class ScheduleServiceImpl implements ScheduleService {
     private final UserNotificationService userNotificationService;
     private final UserService userService;
     private final OpenViduUtil openViduUtil;
+    private final TeamUserRepository teamUserRepository;
 
     @Transactional
     @Override
@@ -84,6 +89,30 @@ public class ScheduleServiceImpl implements ScheduleService {
         findSchedule.isFinished(isFinish);
     }
 
+    @Override
+    public List<ScheduleResponseDto> findTaskByUser(int userId, DateCondition dateCondition) {
+        return scheduleRepository.findScheduleByAssigneeInfo(findUserBelongs(userId), dateCondition, true)
+                .stream()
+                .map(ScheduleResponseDto::new)
+                .toList();
+    }
+
+    @Override
+    public List<ScheduleResponseDto> findByUser(int userId, DateCondition dateCondition) {
+        return scheduleRepository.findScheduleByAssigneeInfo(findUserBelongs(userId), dateCondition, false)
+                .stream()
+                .map(ScheduleResponseDto::new)
+                .toList();
+    }
+
+    @Override
+    public List<ScheduleResponseDto> findByAssignees(List<AssigneeInfo> assigneeInfos, DateCondition dateCondition) {
+        return scheduleRepository.findScheduleByAssigneeInfo(assigneeInfos, dateCondition, false)
+                .stream()
+                .map(ScheduleResponseDto::new)
+                .toList();
+    }
+
     @Transactional
     @Override
     public void deleteSchedule(Integer scheduleId) {
@@ -115,6 +144,22 @@ public class ScheduleServiceImpl implements ScheduleService {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    @Override
+    public List<AssigneeInfo> findUserBelongs(int userId) {
+
+        List<AssigneeInfo> searchParameterDtoList = new ArrayList<>();
+        User user = findUser(userId);
+
+        searchParameterDtoList.add(new AssigneeInfo(TARGET_USER_CODE_ID, userId));
+        searchParameterDtoList.add(new AssigneeInfo(TARGET_DEPARTMENT_CODE_ID, user.getUserDepartment().getDepartmentId()));
+
+        List<TeamUser> teamUsersByUser = teamUserRepository.findTeamUserByUserId(userId);
+        for (TeamUser teamUser: teamUsersByUser){
+            searchParameterDtoList.add(new AssigneeInfo(TARGET_TEAM_CODE_ID, teamUser.getTeamUserTeam().getTeamId()));
+        }
+        return searchParameterDtoList;
     }
 
     private Schedule findSchedule(int scheduleId) {
