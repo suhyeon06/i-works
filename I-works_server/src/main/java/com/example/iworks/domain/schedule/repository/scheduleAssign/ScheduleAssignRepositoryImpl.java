@@ -28,13 +28,13 @@ public class ScheduleAssignRepositoryImpl implements ScheduleAssignGetRepository
 
    @Override
    public List<ScheduleAssign> findScheduleAssignsBySearchParameter(List<AssigneeInfo> requestDtoList, DateCondition dateCondition, boolean onlyTask) {
-      Set<ScheduleAssign> foundScheduleAssignList = new HashSet<>();
+      Set<ScheduleAssign> foundScheduleAssignSet = new HashSet<>();
 
       for (AssigneeInfo requestDto : requestDtoList){
          List<ScheduleAssign> foundScheduleAssign =
                  jpaQueryFactory
                          .selectFrom(scheduleAssign)
-                         .join(scheduleAssign.schedule, schedule)//.fetchJoin()
+                         .join(scheduleAssign.schedule, schedule).fetchJoin()
                          .where(eqAssignee(requestDto.getCategoryCodeId(), requestDto.getAssigneeId()).and(notDeleted())
                                  ,withInDate(dateCondition)
                                  ,filterTask(onlyTask)
@@ -42,9 +42,9 @@ public class ScheduleAssignRepositoryImpl implements ScheduleAssignGetRepository
                          .distinct()
                          .fetch();
 
-         foundScheduleAssignList.addAll(foundScheduleAssign);
+         foundScheduleAssignSet.addAll(foundScheduleAssign);
       }
-      return new ArrayList<>(foundScheduleAssignList);
+      return new ArrayList<>(foundScheduleAssignSet);
    }
    
 
