@@ -52,15 +52,15 @@ public class SecurityConfig {
                 // 특정 URL에 대한 권한 설정.
                 .authorizeHttpRequests((authorizeRequests) -> {
                     authorizeRequests
-                            .requestMatchers("/api/user/login").anonymous()
+//                            .requestMatchers("/api/user/login").anonymous()
+//
+//                            .requestMatchers("/api/**").authenticated()
+//
+//                            .requestMatchers("/api/leader/**")
+//                            .hasAnyRole("ADMIN", "LEADER", "CEO")
 
-                            .requestMatchers("/api/**").authenticated()
-
-                            .requestMatchers("/api/leader/**")
-                            .hasAnyRole("ADMIN", "LEADER", "CEO")
-
-                            .requestMatchers("/api/admin/**")
-                            .hasRole("ADMIN")
+//                            .requestMatchers("/api/admin/**")
+//                            .hasRole("ADMIN")
 
                             .anyRequest().permitAll();
                 })
